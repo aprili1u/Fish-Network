@@ -7,4 +7,6 @@ M2: All nodes are already connected and the edges are picked according to a dist
 M3: The edges are created with already made networks: 'Erdos-Renyi' (need for an extra m parameter m beeing the number of edges)
 'Small-world' (need an extra para k nearest neighbors in ring topology and p : float The probability of rewiring each edge)
 
-You can fix memory and agression (so every individual has the same and it doesn't evolve through generations)
+You can fix memory and agression (so every individual has the same and/or it doesn't evolve through generations)
+
+We can look at evolution though generations. (Plot before refresh if needed)

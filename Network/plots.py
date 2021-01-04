@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import networkx as nx
 
 def count_occurrence(list_of_list):  
     ## returns a list of int that corresponds to the number of occurence of each element in each list in list of list
@@ -60,6 +61,7 @@ def plot2(network,Fit_max):
     for i in range(len(fitness_history)): # for each individual
         size = count_occurrence([memory_history[i]])
         memo = memory_history[i][0]
+        cat = 0
         cat1 = 0 #count occurence (0,Fit_max/4)
         cat2 = 0 #count occurence (Fit_max/4, Fit_max/2)
         cat3 = 0
@@ -67,7 +69,7 @@ def plot2(network,Fit_max):
         for k in range (len(fitness_history[i])):
             fit = fitness_history[i][k]       
             if memo != memory_history[i][k]:            
-             #size = cat
+              #size = cat
                 if cat != 0:
                     ax2.scatter(i, memo, s = cat , marker = cercle((cat3+cat2+cat1)/cat,1), facecolor='red') #cat4
                     ax2.scatter(i, memo, s = cat , marker = cercle((cat2+cat1)/cat,(cat3+cat2+cat1)/cat), facecolor='orange')
@@ -97,7 +99,7 @@ def plot2(network,Fit_max):
     plt.show()
 
 def plot_boxes(network):
-    # 
+    # same as plot1 but with boxes to show Q1,Q2,Q3,Q4
     data = memory_history = network.memory_history
     fig = plt.figure(figsize =(10, 7)) 
     plt.xlabel('Individual')  
@@ -106,3 +108,45 @@ def plot_boxes(network):
     ax = fig.add_axes([0, 0, 1, 1]) 
     bp = ax.boxplot(data) 
     plt.show() 
+    
+def plot_means(network):
+    #plots average fitness, memory, agression for each generation
+    t = len(network.history)
+    fit_history = [network.history[i][0] for i in range(t)]
+    memo_history = [network.history[i][1] for i in range(t)]
+    aggr_history = [network.history[i][2] for i in range(t)]
+    x = np.arange(t)
+    fig, axes = plt.subplots(3,1, figsize = (20, 15))
+    axes[0].plot(x, fit_history)
+    axes[0].set_title('fitness')
+    axes[1].plot(x, memo_history)
+    axes[1].set_title('memory')
+    axes[2].plot(x, aggr_history)
+    axes[2].set_title('aggression')
+    plt.show()
+
+def plot_transit(network,indiv):
+    # plots a graph of probability of transit from state to state 
+    # the nodes are the different states and the edges the probability of transit
+    
+    #nodes = count_occurrence([network.memory_history[indiv]]) #the different states
+    dic = {}
+    for i in range (len(network.memory_history[indiv])-1):
+        edge = (str(round(network.memory_history[indiv][i],2)),str(round(network.memory_history[indiv][i+1],2))) 
+        if edge in dic:
+            dic[edge] += 1
+        else:
+            dic[edge] = 1
+
+    edges = [*dic.keys()]
+    G = nx.MultiDiGraph()
+    G.add_edges_from(edges)
+    pos = nx.spring_layout(G)
+    plt.figure()    
+    nx.draw(G,pos,edge_color='black',width=1,linewidths=1,\
+    node_size=500,node_color='pink',alpha=0.9,\
+    labels={node:node for node in G.nodes()})
+    nx.draw_networkx_edge_labels(G,pos,edge_labels=dic,font_color='red')
+    plt.axis('off')
+    plt.show()
+    return dic

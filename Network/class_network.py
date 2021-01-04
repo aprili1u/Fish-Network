@@ -299,6 +299,9 @@ class Network:
         return
     
     def refresh_network(self):
+        self.memory_history = [] # memorizes only one generation
+        self.fitness_history = []
+
         if (self.network_methode[0] == 'M1' or self.network_methode[0] == 'M2'):
             self.graphs.append(nx.MultiGraph()) #graph for the new generation
         
@@ -319,10 +322,6 @@ class Network:
 
         #record means to see results
         self.history.append([mean_fitness, np.mean(reproducing_node_memory), np.mean(reproducing_node_aggression)])
-        #record the fitness, memory, level of agression
-        self.memory_history.append(reproducing_node_memory)
-        #self.aggression_history.append(reproducing_node_aggression)
-        self.fitness_history.append(fitness)
         
         #add mutations
         memory_mutations = np.random.standard_normal(self.num_nodes).astype(int) #mutation offsets for memory, integers from Gaussian(0,1)
@@ -337,7 +336,9 @@ class Network:
             if (self.network_methode[0] != 'M3'):
                 self.graphs[len(self.graphs)-1].add_node(i,key=i) 
             #self.nodes.append(Node(sizes[i], reproducing_node_memory[i], reproducing_node_aggression[i]))
-            self.nodes.append(Node(i/(self.num_nodes-1), memory[i], aggression[i])) #the size is: i/(self.num_nodes-1)
+            self.nodes.append(Node(i/(self.num_nodes-1), reproducing_node_memory[i], reproducing_node_aggression[i])) #the size is: i/(self.num_nodes-1)
+            self.fitness_history.append([self.nodes[i].fitness]) #fill the initial fitness of each fish (0)
+            self.memory_history.append([self.nodes[i].max_size-self.nodes[i].min_size])
         
     def show(self):
         ##shows the graph of the last generation
