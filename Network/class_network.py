@@ -85,7 +85,10 @@ class Network:
             if (self.network_methode[1] == 'Erdos-Renyi'):
                 self.Max_edges = self.network_methode[2]
                 self.graphs = [nx.gnm_random_graph(num_nodes, self.Max_edges)]
-
+            if (self.network_methode[1] == 'Small-world'):
+                self.graphs = [nx.watts_strogatz_graph(num_nodes, self.network_methode[2], self.network_methode[3])]
+                self.Max_edges = len(self.graphs[0].edges())
+                
              
     def interact(self):    
         #by default each node has the same probability of having an interaction, with all nodes equally likely to interact with all other nodes
@@ -146,6 +149,8 @@ class Network:
         #Every Node pays a cost per memory slot after every time step (even if they haven't interacted)
         for node in self.nodes:
             node.fitness -= len(node.size_memory)*self.memory_cost
+            if (node.fitness < 0):
+                node.fitness = 0
 
         
     def hawk_dove(self, node1, node2):
@@ -299,8 +304,10 @@ class Network:
         
         elif (self.network_methode[0] == 'M3'):
             if (self.network_methode[1] == 'Erdos-Renyi'):
-                self.Max_edges = self.network_methode[2]
-                self.graphs.append(nx.gnm_random_graph(num_nodes, self.Max_edges))
+                self.graphs.append(nx.gnm_random_graph(self.num_nodes, self.Max_edges))
+            if (self.network_methode[1] == 'Small-world'):
+                self.graphs.append(nx.watts_strogatz_graph(self.num_nodes, self.network_methode[2], self.network_methode[3]))
+
 
         #create new Nodes to fully replace the existing network
         fitness = np.array([node.fitness for node in self.nodes]) #get fitness of Nodes
@@ -314,7 +321,7 @@ class Network:
         self.history.append([mean_fitness, np.mean(reproducing_node_memory), np.mean(reproducing_node_aggression)])
         #record the fitness, memory, level of agression
         self.memory_history.append(reproducing_node_memory)
-        self.aggression_history.append(reproducing_node_aggression)
+        #self.aggression_history.append(reproducing_node_aggression)
         self.fitness_history.append(fitness)
         
         #add mutations
