@@ -1,6 +1,7 @@
 import numpy as np
 import networkx as nx
 import math
+import random
 import matplotlib.pyplot as plt
 from class_node import Node
 
@@ -46,9 +47,7 @@ def check_network_method(network_method):
 
     if (network_M[0] == 'M3'):
         pass
-
     return network_M
-
 
 
 
@@ -74,13 +73,19 @@ class Network:
         for i in range(self.num_nodes):
             #self.nodes.append(Node(sizes[i], memory[i], aggression[i]))
             self.nodes.append(Node(i/(self.num_nodes-1), memory[i], aggression[i])) #the size is: i/(self.num_nodes-1)
-        self.graphs = [nx.MultiGraph()] #list of each generation's graph
-        self.Max_edges = self.num_nodes*(self.num_nodes-1)/2 #the id Max that an edge can get
-        for i in range(num_nodes):
-            self.graphs[0].add_node(i,key=i)
             self.fitness_history.append([self.nodes[i].fitness]) #fill the initial fitness of each fish (0)
             self.memory_history.append([self.nodes[i].max_size-self.nodes[i].min_size])
-        self.id_edges = id_edges(self.Max_edges)
+        if (self.network_methode[0] == 'M1' or self.network_methode[0] == 'M2'):
+            self.graphs = [nx.MultiGraph()] #list of each generation's graph
+            self.Max_edges = self.num_nodes*(self.num_nodes-1)/2 #the id Max that an edge can get
+            for i in range(num_nodes):
+                self.graphs[0].add_node(i,key=i)
+            self.id_edges = id_edges(self.Max_edges)
+        if (self.network_methode[0] == 'M3'):
+            if (self.network_methode[1] == 'Erdos-Renyi'):
+                self.Max_edges = self.network_methode[2]
+                self.graphs = [nx.gnm_random_graph(num_nodes, self.Max_edges)]
+
              
     def interact(self):    
         #by default each node has the same probability of having an interaction, with all nodes equally likely to interact with all other nodes
@@ -125,14 +130,24 @@ class Network:
                 self.memory_history[ind2].append(self.nodes[ind2].max_size-self.nodes[ind2].min_size)
                 self.fitness_history[ind1].append(self.nodes[ind1].fitness)
                 self.fitness_history[ind2].append(self.nodes[ind2].fitness)
-                
+
+        elif (self.network_methode[0] == 'M3'):
+            for i in range(int(self.interactions_per_node*self.num_nodes/2)):
+                edge = random.randint(0, self.Max_edges-1)
+                edges = list(self.graphs[0].edges())
+                (ind1, ind2) = edges[edge]
+                self.hawk_dove(self.nodes[ind1], self.nodes[ind2])
+                #memories fitness and SL-sW 
+                self.memory_history[ind1].append(self.nodes[ind1].max_size-self.nodes[ind1].min_size)
+                self.memory_history[ind2].append(self.nodes[ind2].max_size-self.nodes[ind2].min_size)
+                self.fitness_history[ind1].append(self.nodes[ind1].fitness)
+                self.fitness_history[ind2].append(self.nodes[ind2].fitness) 
+
         #Every Node pays a cost per memory slot after every time step (even if they haven't interacted)
         for node in self.nodes:
             node.fitness -= len(node.size_memory)*self.memory_cost
 
         
-
-
     def hawk_dove(self, node1, node2):
         #increment the total number of interactions a Node has had over its lifetime
         node1.num_interactions += 1
@@ -279,8 +294,14 @@ class Network:
         return
     
     def refresh_network(self):
-        self.graphs.append(nx.MultiGraph()) #graph for the new generation
+        if (self.network_methode[0] == 'M1' or self.network_methode[0] == 'M2'):
+            self.graphs.append(nx.MultiGraph()) #graph for the new generation
         
+        elif (self.network_methode[0] == 'M3'):
+            if (self.network_methode[1] == 'Erdos-Renyi'):
+                self.Max_edges = self.network_methode[2]
+                self.graphs.append(nx.gnm_random_graph(num_nodes, self.Max_edges))
+
         #create new Nodes to fully replace the existing network
         fitness = np.array([node.fitness for node in self.nodes]) #get fitness of Nodes
         mean_fitness = np.mean(fitness)
@@ -306,7 +327,8 @@ class Network:
         
         del self.nodes[:] #clear current nodes
         for i in range(self.num_nodes): #create new nodes
-            self.graphs[len(self.graphs)-1].add_node(i,key=i) 
+            if (self.network_methode[0] != 'M3'):
+                self.graphs[len(self.graphs)-1].add_node(i,key=i) 
             #self.nodes.append(Node(sizes[i], reproducing_node_memory[i], reproducing_node_aggression[i]))
             self.nodes.append(Node(i/(self.num_nodes-1), memory[i], aggression[i])) #the size is: i/(self.num_nodes-1)
         
