@@ -16,7 +16,7 @@ def cercle(r1,r2):
     return xy
 
 def plot1(network, pace):
-    #plot relationship between fitness and memory for each individual of one génération 
+    #plot relationship between fitness and memory for each individual of one generation 
     # the size of the dots depends on the numbers of times that the individual is in that situation
     #returns the Fitness maximum
     l=len(network.memory_history)

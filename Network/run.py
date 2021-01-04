@@ -8,9 +8,9 @@ hawk_dove_payoff = [0.5, -1.5, 1, 0, 0.5, 0.5]
 memory_cost = 0.01  
 initial_memory_poisson = 4
 initial_aggression = 1
-
+network_methode = ['M2','Uniform',6,0.1]
 #Create the initial Network
-my_network = Network(num_nodes, interactions_per_node, hawk_dove_payoff, memory_cost, initial_memory_poisson, initial_aggression)
+my_network = Network(num_nodes, interactions_per_node, hawk_dove_payoff, memory_cost, initial_memory_poisson, initial_aggression, network_methode)
 my_network.interact()
 my_network.show()
 

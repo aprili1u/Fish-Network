@@ -26,26 +26,26 @@ def check_network_method(network_method):
     if type(network_M) != list:
         print('Error with the input network_methode')
 
-
     if(network_M[0] != 'M1' or network_M[0] != 'M2' or network_M[0] != 'M3'):
         print('Error with the input network_methode')
 
-    if (network_M[0] = 'M1'):
+    if (network_M[0] == 'M1'):
         if (len(network_M) > 1):
             print('Error with the input network_methode')
 
-    if (network_M[0] = 'M2'):
+    if (network_M[0] == 'M2'):
         if (len(network_M) < 3):
             print('Error with the input network_methode')
         if (network_M[1] != 'Poisson' or network_M[1] != 'Uniform' or network_M[1] != 'Normal' ):
             print('Error with the input network_methode')
-        if (network_M[1] = 'Poisson' and len(network_M) > 3):
+        if (network_M[1] == 'Poisson' and len(network_M) > 3):
             print('Error with the input network_methode')
-        if (network_M[1] = 'Uniform' or network_M[1] = 'Normal'):
+        if (network_M[1] == 'Uniform' or network_M[1] == 'Normal'):
             if (len(network_M) != 4 or network_M[3]<0):
                 print('Error with the input network_methode')
 
-    if (network_M[0] = 'M3'):
+    if (network_M[0] == 'M3'):
+        pass
 
     return network_M
 
@@ -86,7 +86,7 @@ class Network:
         #by default each node has the same probability of having an interaction, with all nodes equally likely to interact with all other nodes
         #otherwise we use the poisson distribution or Uniform distribution to generate probabilities of picking edges
         
-        if (self.network_methode[0] = 'M1'): #completely random case 
+        if (self.network_methode[0] == 'M1'): #completely random case 
             indices = np.random.choice(self.num_nodes, size = (int(self.interactions_per_node*self.num_nodes/2), 2)) #pick 2 possible nodes to interact
             for i in range(int(self.interactions_per_node*self.num_nodes/2)): #/2 by two because with one edge 2individuals interact
                 ind1 = indices[i][0]
@@ -97,8 +97,14 @@ class Network:
                     ind2 = np.random.choice([index for index in np.arange(self.num_nodes) if index != ind1])
                     self.hawk_dove(self.nodes[ind1], self.nodes[ind2])   
                 self.graphs[len(self.graphs)-1].add_edge(ind1,ind2)
+            
+                #memories fitness and SL-sW 
+                self.memory_history[ind1].append(self.nodes[ind1].max_size-self.nodes[ind1].min_size)
+                self.memory_history[ind2].append(self.nodes[ind2].max_size-self.nodes[ind2].min_size)
+                self.fitness_history[ind1].append(self.nodes[ind1].fitness)
+                self.fitness_history[ind2].append(self.nodes[ind2].fitness)
 
-        elif (self.network_methode[0] = 'M2'): # in this case we add weights to edges according to the poisson or Normal distribution
+        elif (self.network_methode[0] == 'M2'): # in this case we add weights to edges according to the poisson or Normal distribution
             if (self.network_methode[1] == 'Poisson'):
                 distribution = np.random.poisson(self.network_methode[2], int(self.Max_edges))
             if (self.network_methode[1] == 'Uniform'):
@@ -113,16 +119,18 @@ class Network:
                 [ind1,ind2] = self.id_edges[edge]
                 self.graphs[len(self.graphs)-1].add_edge(ind1,ind2)
                 self.hawk_dove(self.nodes[ind1], self.nodes[ind2])
+
+                #memories fitness and SL-sW 
+                self.memory_history[ind1].append(self.nodes[ind1].max_size-self.nodes[ind1].min_size)
+                self.memory_history[ind2].append(self.nodes[ind2].max_size-self.nodes[ind2].min_size)
+                self.fitness_history[ind1].append(self.nodes[ind1].fitness)
+                self.fitness_history[ind2].append(self.nodes[ind2].fitness)
                 
         #Every Node pays a cost per memory slot after every time step (even if they haven't interacted)
         for node in self.nodes:
             node.fitness -= len(node.size_memory)*self.memory_cost
 
-        #memories fitness and SL-sW 
-        self.memory_history[ind1].append(self.nodes[ind1].max_size-self.nodes[ind1].min_size)
-        self.memory_history[ind2].append(self.nodes[ind2].max_size-self.nodes[ind2].min_size)
-        self.fitness_history[ind1].append(self.nodes[ind1].fitness)
-        self.fitness_history[ind2].append(self.nodes[ind2].fitness)
+        
 
 
     def hawk_dove(self, node1, node2):
