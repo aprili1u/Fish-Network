@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #Simulation parameters        
-num_nodes = 10
+num_nodes = 6
 interactions_per_node = 2000
 hawk_dove_payoff = [0.5, -1.5, 1, 0, 0.5, 0.5]
 memory_cost = 0.01  
@@ -16,8 +16,8 @@ network_methode = ['M1']
 
 #Create the initial Network
 my_network = Network(num_nodes, interactions_per_node, hawk_dove_payoff, memory_cost, initial_memory_poisson, initial_aggression, network_methode)
-for i in range(2): #simulate this many generations
+for i in range(4): #simulate this many generations
     my_network.interact()
     plot1(my_network,1)
-    plot_transit(my_network,1)
+    #plot_transit(my_network,4)
     my_network.refresh_network()

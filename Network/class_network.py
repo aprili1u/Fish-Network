@@ -22,7 +22,8 @@ def id_edges(z):
     return(d) 
 
 def check_network_method(network_method):
-    ##check the coherence of the input network_method
+    ##check the coherence of the input network_method 
+    #doesn't really work for now...
     network_M = network_method 
     if type(network_M) != list:
         print('Error with the input network_methode')
@@ -62,13 +63,14 @@ class Network:
         self.history = [] #after every refresh, save the average fitness, memory, and aggression
         self.memory_history = [] # memories sL-sW for one generation every interaction initial sL-sW = 1
         self.fitness_history = []   # memories fitness for one generation every interaction
-        #memory = np.random.poisson(initial_memory_poisson, size = self.num_nodes) #initial memory is a poisson distribution
-        memory = [initial_memory_poisson]*self.num_nodes #we fix the memory 
-        #aggression = np.random.normal(initial_aggression, 0.05, self.num_nodes) #initial aggression is a Gaussian(loc, 0.05)
-        aggression = [initial_aggression]*self.num_nodes #we fix aggression for the moment
+        memory = np.random.poisson(initial_memory_poisson, size = self.num_nodes) #initial memory is a poisson distribution
+        #memory = [initial_memory_poisson]*self.num_nodes #we fix the memory 
+        aggression = np.random.normal(initial_aggression, 0.05, self.num_nodes) #initial aggression is a Gaussian(loc, 0.05)
+        #aggression = [initial_aggression]*self.num_nodes #we fix aggression for the moment
         #sizes = np.random.random_sample(self.num_nodes) #generate uniform sample of sizes list, each node has a 'size'
         
-        self.network_methode = check_network_method(network_methode) #list with first element the methode, second the mode, 3rd mean, 4th para
+        #self.network_methode = check_network_method(network_methode) #list with first element the methode, second the mode, 3rd mean, 4th para
+        self.network_methode = network_methode
         #create inital Nodes
         for i in range(self.num_nodes):
             #self.nodes.append(Node(sizes[i], memory[i], aggression[i]))
@@ -325,9 +327,9 @@ class Network:
         
         #add mutations
         memory_mutations = np.random.standard_normal(self.num_nodes).astype(int) #mutation offsets for memory, integers from Gaussian(0,1)
-        #aggression_mutations = np.random.normal(0, 0.01, self.num_nodes).astype('float64') #mutation offsets for aggression, Gaussian(0, 0.05) values
+        aggression_mutations = np.random.normal(0, 0.01, self.num_nodes).astype('float64') #mutation offsets for aggression, Gaussian(0, 0.05) values
         reproducing_node_memory += memory_mutations #mutate memory
-        #reproducing_node_aggression += aggression_mutations #mutate aggression
+        reproducing_node_aggression += aggression_mutations #mutate aggression
         
         #sizes = np.random.random_sample(self.num_nodes) #generate uniform sample of sizes
         

@@ -126,7 +126,7 @@ def plot_means(network):
     plt.show()
 
 def plot_transit(network,indiv):
-    # plots a graph of probability of transit from state to state 
+    # plots a graph of probability of transit from state to state for one individual of one generation
     # the nodes are the different states and the edges the probability of transit -p--->
     
     #nodes = count_occurrence([network.memory_history[indiv]]) #the different states
@@ -143,10 +143,12 @@ def plot_transit(network,indiv):
     G.add_edges_from(edges)
     pos = nx.spring_layout(G)
     plt.figure()    
-    nx.draw(G,pos,edge_color='black',width=1,linewidths=1,\
+    prop_width=np.array([*dic.values()]) #can be used for width
+    prop_width=prop_width/np.mean(prop_width)
+    nx.draw(G,pos,edge_color='black',width=prop_width,linewidths=1,\
     node_size=500,node_color='pink',alpha=0.9,\
     labels={node:node for node in G.nodes()})
-    nx.draw_networkx_edge_labels(G,pos,edge_labels=dic,label_pos=0.8,font_color='red')
+    nx.draw_networkx_edge_labels(G,pos,edge_labels=dic,alpha=0.7, label_pos=0.8,font_color='red')
     plt.axis('off')
     plt.show()
     return dic
