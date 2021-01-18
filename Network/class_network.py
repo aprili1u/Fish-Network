@@ -52,7 +52,6 @@ def check_network_method(network_method):
 
 
 
-
 class Network:
     def __init__(self, num_nodes, interactions_per_node, hawk_dove_payoff, memory_cost, initial_memory_poisson, initial_aggression, network_methode):
         self.num_nodes = num_nodes # an int
