@@ -50,6 +50,17 @@ def check_network_method(network_method):
         pass
     return network_M
 
+def extremum_centrality(graph):
+    """takes a graph and returns a couple with the least central and most central node""" 
+    centrality = nx.betweenness_centrality(graph)
+    min_value = min(centrality.values())
+    min_keys = [k for k in centrality if centrality[k] == min_value] 
+    min_centrality = np.random.choice(min_keys) #when possible options we randomly pick one
+    max_value = max(centrality.values())
+    max_keys = [k for k in centrality if centrality[k] == max_value]
+    max_centrality = np.random.choice(max_keys)
+    return (min_centrality,max_centrality)
+
 
 
 class Network:
@@ -60,22 +71,22 @@ class Network:
         self.memory_cost = memory_cost #metabolic cost of each memory slot, paid after each interaction
         self.nodes = [] #list of Node objects of the network
         self.history = [] #after every refresh, save the average fitness, memory, and aggression
-        self.memory_history = [] # memories sL-sW for one generation every interaction initial sL-sW = 1
+        self.memo_uncertainty_history = [] # memories sL-sW for one generation every interaction initial sL-sW = 1
         self.fitness_history = []   # memories fitness for one generation every interaction
-        memory = np.random.poisson(initial_memory_poisson, size = self.num_nodes) #initial memory is a poisson distribution
-        #memory = [initial_memory_poisson]*self.num_nodes #we fix the memory 
-        aggression = np.random.normal(initial_aggression, 0.05, self.num_nodes) #initial aggression is a Gaussian(loc, 0.05)
-        #aggression = [initial_aggression]*self.num_nodes #we fix aggression for the moment
+        self.memory = np.random.poisson(lam = initial_memory_poisson, size = self.num_nodes) #initial memory is a poisson distribution
+        #self.memory = [initial_memory_poisson]*self.num_nodes #we fix the memory 
+        self.aggression = np.random.normal(loc = initial_aggression, scale = 0.05, size = self.num_nodes) #initial aggression is a Gaussian(loc, 0.05)
+        #self.aggression = [initial_aggression]*self.num_nodes #we fix aggression for the moment
         #sizes = np.random.random_sample(self.num_nodes) #generate uniform sample of sizes list, each node has a 'size'
         
         #self.network_methode = check_network_method(network_methode) #list with first element the methode, second the mode, 3rd mean, 4th para
         self.network_methode = network_methode
         #create inital Nodes
         for i in range(self.num_nodes):
-            #self.nodes.append(Node(sizes[i], memory[i], aggression[i]))
-            self.nodes.append(Node(i/(self.num_nodes-1), memory[i], aggression[i])) #the size is: i/(self.num_nodes-1)
+            #self.nodes.append(Node(sizes[i], self.memory[i], self.aggression[i]))
+            self.nodes.append(Node(i/(self.num_nodes-1), self.memory[i], self.aggression[i])) #the size is: i/(self.num_nodes-1)
             self.fitness_history.append([self.nodes[i].fitness]) #fill the initial fitness of each fish (0)
-            self.memory_history.append([self.nodes[i].max_size-self.nodes[i].min_size])
+            self.memo_uncertainty_history.append([self.nodes[i].max_size-self.nodes[i].min_size])
         if (self.network_methode[0] == 'M1' or self.network_methode[0] == 'M2'):
             self.graphs = [nx.MultiGraph()] #list of each generation's graph
             self.Max_edges = self.num_nodes*(self.num_nodes-1)/2 #the id Max that an edge can get
@@ -89,6 +100,10 @@ class Network:
             if (self.network_methode[1] == 'Small-world'):
                 self.graphs = [nx.watts_strogatz_graph(num_nodes, self.network_methode[2], self.network_methode[3])]
                 self.Max_edges = len(self.graphs[0].edges())
+            if (self.network_methode[1] == 'Regular-lattice'):
+                self.graphs = [nx.watts_strogatz_graph(num_nodes, self.network_methode[2], 0)]
+                self.Max_edges = len(self.graphs[0].edges())
+        (self.min_centrality,self.max_centrality) = extremum_centrality(self.graphs[0])
                 
              
     def interact(self):    
@@ -108,8 +123,8 @@ class Network:
                 self.graphs[len(self.graphs)-1].add_edge(ind1,ind2)
             
                 #memories fitness and SL-sW 
-                self.memory_history[ind1].append(self.nodes[ind1].max_size-self.nodes[ind1].min_size)
-                self.memory_history[ind2].append(self.nodes[ind2].max_size-self.nodes[ind2].min_size)
+                self.memo_uncertainty_history[ind1].append(self.nodes[ind1].max_size-self.nodes[ind1].min_size)
+                self.memo_uncertainty_history[ind2].append(self.nodes[ind2].max_size-self.nodes[ind2].min_size)
                 self.fitness_history[ind1].append(self.nodes[ind1].fitness)
                 self.fitness_history[ind2].append(self.nodes[ind2].fitness)
 
@@ -117,8 +132,8 @@ class Network:
             if (self.network_methode[1] == 'Poisson'):
                 distribution = np.random.poisson(self.network_methode[2], int(self.Max_edges))
             if (self.network_methode[1] == 'Uniform'):
-                L = self.network_methode[2]-math.sqrt(3*self.network_methode[3])
-                H = self.network_methode[2]+math.sqrt(3*self.network_methode[3])+1
+                L = self.network_methode[2]-math.sqrt(3)*self.network_methode[3]
+                H = self.network_methode[2]+math.sqrt(3)*self.network_methode[3]+1
                 distribution = np.random.randint(np.round(L),np.round(H),int(self.Max_edges))
             if (self.network_methode[1] == 'Normal'):
                 distribution = np.random.normal(self.network_methode[2], self.network_methode[3], int(self.Max_edges))
@@ -130,8 +145,8 @@ class Network:
                 self.hawk_dove(self.nodes[ind1], self.nodes[ind2])
 
                 #memories fitness and SL-sW 
-                self.memory_history[ind1].append(self.nodes[ind1].max_size-self.nodes[ind1].min_size)
-                self.memory_history[ind2].append(self.nodes[ind2].max_size-self.nodes[ind2].min_size)
+                self.memo_uncertainty_history[ind1].append(self.nodes[ind1].max_size-self.nodes[ind1].min_size)
+                self.memo_uncertainty_history[ind2].append(self.nodes[ind2].max_size-self.nodes[ind2].min_size)
                 self.fitness_history[ind1].append(self.nodes[ind1].fitness)
                 self.fitness_history[ind2].append(self.nodes[ind2].fitness)
 
@@ -142,8 +157,8 @@ class Network:
                 (ind1, ind2) = edges[edge]
                 self.hawk_dove(self.nodes[ind1], self.nodes[ind2])
                 #memories fitness and SL-sW 
-                self.memory_history[ind1].append(self.nodes[ind1].max_size-self.nodes[ind1].min_size)
-                self.memory_history[ind2].append(self.nodes[ind2].max_size-self.nodes[ind2].min_size)
+                self.memo_uncertainty_history[ind1].append(self.nodes[ind1].max_size-self.nodes[ind1].min_size)
+                self.memo_uncertainty_history[ind2].append(self.nodes[ind2].max_size-self.nodes[ind2].min_size)
                 self.fitness_history[ind1].append(self.nodes[ind1].fitness)
                 self.fitness_history[ind2].append(self.nodes[ind2].fitness) 
 
@@ -300,7 +315,7 @@ class Network:
         return
     
     def refresh_network(self):
-        self.memory_history = [] # memorizes only one generation
+        self.memo_uncertainty_history = [] # memorizes only one generation
         self.fitness_history = []
 
         if (self.network_methode[0] == 'M1' or self.network_methode[0] == 'M2'):
@@ -311,8 +326,10 @@ class Network:
                 self.graphs.append(nx.gnm_random_graph(self.num_nodes, self.Max_edges))
             if (self.network_methode[1] == 'Small-world'):
                 self.graphs.append(nx.watts_strogatz_graph(self.num_nodes, self.network_methode[2], self.network_methode[3]))
-
-
+            if (self.network_methode[1] == 'Regular-lattice'):
+                self.graphs = [nx.watts_strogatz_graph(self.num_nodes, self.network_methode[2], 0)]
+        (self.min_centrality,self.max_centrality) = extremum_centrality(self.graphs[0])
+        
         #create new Nodes to fully replace the existing network
         fitness = np.array([node.fitness for node in self.nodes]) #get fitness of Nodes
         mean_fitness = np.mean(fitness)
@@ -339,7 +356,10 @@ class Network:
             #self.nodes.append(Node(sizes[i], reproducing_node_memory[i], reproducing_node_aggression[i]))
             self.nodes.append(Node(i/(self.num_nodes-1), reproducing_node_memory[i], reproducing_node_aggression[i])) #the size is: i/(self.num_nodes-1)
             self.fitness_history.append([self.nodes[i].fitness]) #fill the initial fitness of each fish (0)
-            self.memory_history.append([self.nodes[i].max_size-self.nodes[i].min_size])
+            self.memo_uncertainty_history.append([self.nodes[i].max_size-self.nodes[i].min_size])
+        self.aggression = reproducing_node_aggression
+        self.memory = reproducing_node_memory
+        self.graphs[0]
         
     def show(self):
         ##shows the graph of the last generation
